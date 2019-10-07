@@ -10,6 +10,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use Firebase\JWT\JWT;
 
 class SiteController extends Controller
 {
@@ -140,5 +141,35 @@ class SiteController extends Controller
         } else {
             return $this->render('entry', ['model' => $model]);
         }
+    }
+
+    public function actionJwt()
+    {
+        $key = Yii::$app->request->get("key");
+
+        $tokenId = base64_encode(random_bytes(32));
+        $issuedAt = time();
+        $notBefore = $issuedAt + 5;
+        $expire = $notBefore + 1800;
+
+        $data = [
+            'iss' => 'localhost:8080',
+            'iat' => $issuedAt,
+            'jti' => $tokenId,
+            'nbf' => $notBefore,
+            'exp' => $expire,
+            'data' => [
+                'id' => "id0101",
+                'username' => "moxspoy",
+            ]
+        ];
+
+        $jwt = JWT::encode($data, $key,'HS256');
+        //print_r($jwt);
+
+        JWT::$leeway = 30; // $leeway in seconds
+        $decoded_jwt = JWT::decode($jwt, $key, array('HS256'));
+        $json_decoded = json_encode($decoded_jwt);
+        echo $json_decoded;
     }
 }
